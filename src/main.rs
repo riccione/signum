@@ -1,7 +1,7 @@
 use clap::{Parser};
 use rand::{Rng, thread_rng};
 use rand::seq::SliceRandom;
-use std::{char, str};
+use std::{char};
 use std::process::ExitCode;
 
 #[derive(Parser)]

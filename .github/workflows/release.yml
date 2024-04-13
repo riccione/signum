@@ -69,7 +69,7 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/$ARTIFACT
+          target/release/signum
         args: --best --lzma
 
     # experimental part for UPX
@@ -79,7 +79,7 @@ jobs:
       with:
         version: latest
         files: |
-          target/release/$ARTIFACT.exe
+          target/release/signum.exe
         args: --best --lzma
     
     - name: Upload binaries to release
