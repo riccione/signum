@@ -34,32 +34,28 @@ fn main() -> ExitCode {
     let password_len: usize = args.len.unwrap_or(10) as usize;
    
     for _ in 0..args.num.unwrap_or(1) {
-        if args.digit {
-            let password2: String = (0..password_len)
-                .map(|_| {
-                    let idx = rng.gen_range(0..password_len);
-                    DIGITS[idx] as char
-                })
-                .collect();
-            println!("{password2}");
+        let s: String = if args.digit {
+            get_rng(DIGITS, password_len, DIGITS.len())
         } else {
-            let mut pass: Vec<char> = (0..password_len-3)
-                .map(|_| {
-                    let idx = rng.gen_range(0..l);
-                    xs[idx] as char
-                })
-                .collect();
-
+            let mut pass: Vec<char> = get_rng(xs, password_len-3, l);
             pass.push(char::from_digit(ch_digit as u32, 10).unwrap());
             pass.push(*ch_special.unwrap() as char);
             pass.push(*ch_capital.unwrap() as char);
 
             pass.shuffle(&mut thread_rng());
-
-            let s: String = pass.iter().collect();
-
-            println!("{}", s);
-        }
+            pass
+        }.iter().collect();
+        println!("{}", s);
     }
     ExitCode::SUCCESS
+}
+
+fn get_rng(xs: &[u8], l: usize, l1: usize) -> Vec<char> {
+    let mut rng = rand::thread_rng();
+    (0..l)
+        .map(|_| {
+            let idx = rng.gen_range(0..l1);
+            xs[idx] as char
+        })
+        .collect()
 }
