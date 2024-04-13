@@ -6,9 +6,6 @@ on:
 #    tags:
 #      - '*'
 
-env:
-  ARTIFACT: signum
-
 jobs:
   build-release:
     name: build-release
@@ -19,20 +16,20 @@ jobs:
           - build: linux-x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: ${{ env.ARTIFACT }}
-            asset_name: ${{ env.ARTIFACT }}_x86_64-linux
+            artifact_name: ${{ vars.ARTIFACT }}
+            asset_name: ${{ vars.ARTIFACT }}_x86_64-linux
             use-cross: false
           - build: x86_64-pc-windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: ${{ env.ARTIFACT }}.exe
-            asset_name: ${{ env.ARTIFACT }}_x86_64-win.exe
+            artifact_name: ${{ vars.ARTIFACT }}.exe
+            asset_name: ${{ vars.ARTIFACT }}_x86_64-win.exe
             use-cross: false
           - build: macos-x86_64
             os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: ${{ env.ARTIFACT }}
-            asset_name: ${{ env.ARTIFACT }}_x86_64-apple
+            artifact_name: ${{ vars.ARTIFACT }}
+            asset_name: ${{ vars.ARTIFACT }}_x86_64-apple
             use-cross: false
 
     steps:
