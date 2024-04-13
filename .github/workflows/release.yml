@@ -22,8 +22,8 @@ jobs:
           - build: x86_64-pc-windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: ${{ vars.ARTIFACT }}.exe
-            asset_name: ${{ vars.ARTIFACT }}_x86_64-win.exe
+            artifact_name: signum.exe
+            asset_name: signum_x86_64-win.exe
             use-cross: false
           - build: macos-x86_64
             os: macos-latest
