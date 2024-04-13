@@ -19,20 +19,20 @@ jobs:
           - build: linux-x86_64
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: $ARTIFACT
-            asset_name: $ARTIFACT_x86_64-linux
+            artifact_name: ${{ env.ARTIFACT }}
+            asset_name: ${{ env.ARTIFACT }}_x86_64-linux
             use-cross: false
           - build: x86_64-pc-windows-gnu
             os: windows-latest
             target: x86_64-pc-windows-gnu
-            artifact_name: $ARTIFACT.exe
-            asset_name: $ARTIFACT_x86_64-win.exe
+            artifact_name: ${{ env.ARTIFACT }}.exe
+            asset_name: ${{ env.ARTIFACT }}_x86_64-win.exe
             use-cross: false
           - build: macos-x86_64
             os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: $ARTIFACT
-            asset_name: $ARTIFACT_x86_64-apple
+            artifact_name: ${{ env.ARTIFACT }}
+            asset_name: ${{ env.ARTIFACT }}_x86_64-apple
             use-cross: false
 
     steps:
