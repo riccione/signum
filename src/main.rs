@@ -7,10 +7,13 @@ use std::process::ExitCode;
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Cli {
+    /// Generate digit pin
     #[arg(short, long)]
     digit: bool,
+    /// Set length of the password
     #[arg(short, long, value_parser=clap::value_parser!(u8))]
     len: Option<u8>,
+    /// Set numbers of passwords
     #[arg(short, long, value_parser=clap::value_parser!(u8))]
     num: Option<u8>,
 }
