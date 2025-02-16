@@ -1,5 +1,6 @@
 use clap::{Parser};
-use rand::{Rng, thread_rng};
+use rand::{Rng};
+use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use std::{char};
 use std::process::ExitCode;
@@ -28,10 +29,10 @@ fn main() -> ExitCode {
         DIGITS.len() +
         SPECIAL.len();
     let xs: &[u8] = &[CAPITAL, LOWER, DIGITS, SPECIAL].concat();
-    let mut rng = rand::thread_rng();
-    let ch_capital = CAPITAL.choose(&mut rand::thread_rng());
-    let ch_special = SPECIAL.choose(&mut rand::thread_rng());
-    let ch_digit = rng.gen_range(0..10);
+    let mut rng = rand::rng();
+    let ch_capital = CAPITAL.choose(&mut rand::rng());
+    let ch_special = SPECIAL.choose(&mut rand::rng());
+    let ch_digit = rng.random_range(0..10);
 
     let args = Cli::parse();
     let password_len: usize = args.len.unwrap_or(10) as usize;
@@ -45,7 +46,7 @@ fn main() -> ExitCode {
             pass.push(*ch_special.unwrap() as char);
             pass.push(*ch_capital.unwrap() as char);
 
-            pass.shuffle(&mut thread_rng());
+            pass.shuffle(&mut rng);
             pass
         }.iter().collect();
         println!("{}", s);
@@ -54,10 +55,10 @@ fn main() -> ExitCode {
 }
 
 fn get_rng(xs: &[u8], l: usize, l1: usize) -> Vec<char> {
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     (0..l)
         .map(|_| {
-            let idx = rng.gen_range(0..l1);
+            let idx = rng.random_range(0..l1);
             xs[idx] as char
         })
         .collect()
