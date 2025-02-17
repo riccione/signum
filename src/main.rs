@@ -30,8 +30,8 @@ fn main() -> ExitCode {
         SPECIAL.len();
     let xs: &[u8] = &[CAPITAL, LOWER, DIGITS, SPECIAL].concat();
     let mut rng = rand::rng();
-    let ch_capital = CAPITAL.choose(&mut rand::rng());
-    let ch_special = SPECIAL.choose(&mut rand::rng());
+    let ch_capital = CAPITAL.choose(&mut rng);
+    let ch_special = SPECIAL.choose(&mut rng);
     let ch_digit = rng.random_range(0..10);
 
     let args = Cli::parse();
