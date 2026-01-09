@@ -43,7 +43,12 @@ fn main() -> ExitCode {
     
     // magic number 156 comes from default grid size
     // 6x26 
-    let num_to_generate = args.num.unwrap_or(156);
+    let num_to_generate = args.num.unwrap_or(
+        if args.single_column {
+            1 
+        } else { 
+            156
+        });
 
     // fixed 80-char width
     const MAX_WIDTH: usize = 80;
