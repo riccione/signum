@@ -1,8 +1,8 @@
-use clap::{Parser};
-use rand::{Rng};
+use clap::Parser;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
-use std::{char};
+use rand::Rng;
+use std::char;
 use std::process::ExitCode;
 
 #[derive(Parser)]
@@ -20,6 +20,9 @@ struct Cli {
     /// One password per line
     #[arg(short = '1')]
     single_column: bool,
+    /// Don't include capital letters in the password
+    #[arg(short = 'A', long = "no-capitalize")]
+    no_capitalize: bool,
     /// Avoid confusing characters like O, 0, I, l, 1
     #[arg(short, long)]
     safe: bool,
@@ -38,21 +41,23 @@ fn main() -> ExitCode {
     // dynamic defaults based on the 'digit' flag
     let final_len = match args.len {
         Some(l) => l as usize,
-        None => if args.digit { 5 } else { 12 },
+        None => {
+            if args.digit {
+                5
+            } else {
+                12
+            }
+        }
     };
-    
+
     // magic number 156 comes from default grid size
-    // 6x26 
-    let num_to_generate = args.num.unwrap_or(
-        if args.single_column {
-            1 
-        } else { 
-            156
-        });
+    // 6x26
+    let num_to_generate =
+        args.num.unwrap_or(if args.single_column { 1 } else { 156 });
 
     // fixed 80-char width
     const MAX_WIDTH: usize = 80;
-    
+
     // width of password + 1 space for minimal gutter
     let col_width = final_len + 1;
 
@@ -67,7 +72,12 @@ fn main() -> ExitCode {
         let output: String = if args.digit {
             generate_pin(&mut rng, final_len)
         } else {
-            generate_secure_password(&mut rng, final_len, args.safe)
+            generate_secure_password(
+                &mut rng,
+                final_len,
+                args.safe,
+                args.no_capitalize,
+            )
         };
         if num_cols > 1 {
             // print with fixed padding to keep columns aligned
@@ -110,24 +120,38 @@ fn get_pool(base: &[u8], avoid: bool) -> Vec<u8> {
 }
 
 /// Generates a password
-fn generate_secure_password(rng: &mut impl Rng, len: usize, avoid: bool) -> String {
-    let cap_pool = get_pool(CAPITAL, avoid);
+fn generate_secure_password(
+    rng: &mut impl Rng,
+    len: usize,
+    avoid: bool,
+    no_caps: bool,
+) -> String {
+    let cap_pool = if no_caps {
+        vec![]
+    } else {
+        get_pool(CAPITAL, avoid)
+    };
     let low_pool = get_pool(LOWER, avoid);
     let dig_pool = get_pool(DIGITS, avoid);
     let spec_pool = get_pool(SPECIAL, avoid);
 
-    let mut password: Vec<char> = vec![
-        *cap_pool.choose(rng).expect("CAPITAL pool empty") as char,
-        *dig_pool.choose(rng).expect("DIGITS pool empty") as char,
-        *spec_pool.choose(rng).expect("SPECIAL pool empty") as char,
-    ];
+    let mut password: Vec<char> = Vec::new();
+    password.push(*low_pool.choose(rng).expect("LOWER empty") as char);
+    password.push(*dig_pool.choose(rng).expect("DIGITS pool empty") as char);
+    password.push(*spec_pool.choose(rng).expect("SPECIAL pool empty") as char);
 
-    let all_chars: Vec<u8> = [cap_pool, low_pool, dig_pool, spec_pool].concat();
-    
+    if !no_caps {
+        password.push(*cap_pool.choose(rng).expect("CAPITAL empty") as char);
+    }
+
+    let all_chars: Vec<u8> =
+        [&cap_pool[..], &low_pool[..], &dig_pool[..], &spec_pool[..]].concat();
+
     let remaining = len.saturating_sub(password.len());
-    password.extend((0..remaining).map(|_| {
-        *all_chars.choose(rng).expect("Pool is empty") as char
-    }));
+    password.extend(
+        (0..remaining)
+            .map(|_| *all_chars.choose(rng).expect("Pool is empty") as char),
+    );
 
     password.shuffle(rng);
     password.into_iter().take(len).collect()
