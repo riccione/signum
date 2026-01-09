@@ -3,7 +3,6 @@ use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::char;
-use std::process::ExitCode;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -37,7 +36,7 @@ const DIGITS: &[u8] = b"0123456789";
 const SPECIAL: &[u8] = b")-(*&^%$#@!~";
 const AMBIGUOUS: &[u8] = b"O0Il1";
 
-fn main() -> ExitCode {
+fn main() -> Result<(), Box<dyn ::std::error::Error>> {
     let args = Cli::parse();
     let mut rng = rand::rng();
 
@@ -102,7 +101,7 @@ fn main() -> ExitCode {
         println!();
     }
 
-    ExitCode::SUCCESS
+    Ok(())
 }
 
 /// Generates simple numeric PIN
