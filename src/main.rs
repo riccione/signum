@@ -12,11 +12,11 @@ struct Cli {
     #[arg(short, long)]
     digit: bool,
     /// Set length of the password
-    #[arg(short, long, value_parser=clap::value_parser!(u8))]
+    #[arg(index=1, value_parser=clap::value_parser!(u8))]
     len: Option<u8>,
     /// Set numbers of passwords
-    #[arg(short, long, default_value_t = 1, value_parser=clap::value_parser!(u8))]
-    num: u8,
+    #[arg(index=2, default_value_t = 1, value_parser=clap::value_parser!(u16))]
+    num: u16,
     /// Avoid confusing characters like O, 0, I, l, 1
     #[arg(short, long)]
     safe: bool,
