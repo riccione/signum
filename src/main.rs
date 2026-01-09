@@ -24,7 +24,7 @@ struct Cli {
     #[arg(short = 'A', long = "no-capitalize")]
     no_capitalize: bool,
     /// Avoid confusing characters like O, 0, I, l, 1
-    #[arg(short, long)]
+    #[arg(short = 'B', long = "ambiguous")]
     safe: bool,
 }
 
