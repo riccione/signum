@@ -23,6 +23,9 @@ struct Cli {
     /// Don't include capital letters in the password
     #[arg(short = 'A', long = "no-capitalize")]
     no_capitalize: bool,
+    /// Remove characters from the set of characters to generate password
+    #[arg(short = 'r', long = "remove-chars")]
+    remove_chars: Option<String>,
     /// Avoid confusing characters like O, 0, I, l, 1
     #[arg(short = 'B', long = "ambiguous")]
     safe: bool,
@@ -77,8 +80,10 @@ fn main() -> ExitCode {
                 final_len,
                 args.safe,
                 args.no_capitalize,
+                &args.remove_chars,
             )
         };
+
         if num_cols > 1 {
             // print with fixed padding to keep columns aligned
             print!("{:<width$}", output, width = col_width);
@@ -108,15 +113,25 @@ fn generate_pin(rng: &mut impl Rng, len: usize) -> String {
 }
 
 /// Helper to filter out ambiguous characters if requested
-fn get_pool(base: &[u8], avoid: bool) -> Vec<u8> {
-    if avoid {
-        base.iter()
-            .filter(|c| !AMBIGUOUS.contains(c))
-            .cloned()
-            .collect()
-    } else {
-        base.to_vec()
-    }
+fn get_pool(
+    base: &[u8],
+    avoid: bool,
+    custom_exclude: &Option<String>,
+) -> Vec<u8> {
+    base.iter()
+        .filter(|&&c| {
+            if avoid && AMBIGUOUS.contains(&c) {
+                return false;
+            }
+            if let Some(exclude) = custom_exclude {
+                if exclude.as_bytes().contains(&c) {
+                    return false;
+                }
+            }
+            true
+        })
+        .cloned()
+        .collect()
 }
 
 /// Generates a password
@@ -125,27 +140,39 @@ fn generate_secure_password(
     len: usize,
     avoid: bool,
     no_caps: bool,
+    custom_exclude: &Option<String>,
 ) -> String {
     let cap_pool = if no_caps {
         vec![]
     } else {
-        get_pool(CAPITAL, avoid)
+        get_pool(CAPITAL, avoid, custom_exclude)
     };
-    let low_pool = get_pool(LOWER, avoid);
-    let dig_pool = get_pool(DIGITS, avoid);
-    let spec_pool = get_pool(SPECIAL, avoid);
+    let low_pool = get_pool(LOWER, avoid, custom_exclude);
+    let dig_pool = get_pool(DIGITS, avoid, custom_exclude);
+    let spec_pool = get_pool(SPECIAL, avoid, custom_exclude);
 
     let mut password: Vec<char> = Vec::new();
-    password.push(*low_pool.choose(rng).expect("LOWER empty") as char);
-    password.push(*dig_pool.choose(rng).expect("DIGITS pool empty") as char);
-    password.push(*spec_pool.choose(rng).expect("SPECIAL pool empty") as char);
-
-    if !no_caps {
-        password.push(*cap_pool.choose(rng).expect("CAPITAL empty") as char);
+    // Pick mandatory chars ONLY if pools are not empty
+    if let Some(c) = low_pool.choose(rng) {
+        password.push(*c as char);
+    }
+    if let Some(c) = dig_pool.choose(rng) {
+        password.push(*c as char);
+    }
+    if let Some(c) = spec_pool.choose(rng) {
+        password.push(*c as char);
+    }
+    if let Some(c) = cap_pool.choose(rng) {
+        password.push(*c as char);
     }
 
     let all_chars: Vec<u8> =
         [&cap_pool[..], &low_pool[..], &dig_pool[..], &spec_pool[..]].concat();
+
+    // The only hard failure: nothing left to use
+    if all_chars.is_empty() {
+        return "!!!_POOL_EMPTY_!!!".to_string();
+    }
 
     let remaining = len.saturating_sub(password.len());
     password.extend(
@@ -154,5 +181,5 @@ fn generate_secure_password(
     );
 
     password.shuffle(rng);
-    password.into_iter().take(len).collect()
+    password.into_iter().collect()
 }
