@@ -17,12 +17,16 @@ struct Cli {
     /// Set numbers of passwords
     #[arg(short, long, default_value_t = 1, value_parser=clap::value_parser!(u8))]
     num: u8,
+    /// Avoid confusing characters like O, 0, I, l, 1
+    #[arg(short, long)]
+    safe: bool,
 }
 
 const CAPITAL: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LOWER: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 const DIGITS: &[u8] = b"0123456789";
 const SPECIAL: &[u8] = b")-(*&^%$#@!~";
+const AMBIGUOUS: &[u8] = b"O0Il1";
 
 fn main() -> ExitCode {
     let args = Cli::parse();
@@ -38,7 +42,7 @@ fn main() -> ExitCode {
         let pass: String = if args.digit {
             generate_pin(&mut rng, final_len)
         } else {
-            generate_secure_password(&mut rng, final_len)
+            generate_secure_password(&mut rng, final_len, args.safe)
         };
         println!("{}", pass);
     }
@@ -52,17 +56,34 @@ fn generate_pin(rng: &mut impl Rng, len: usize) -> String {
         .collect()
 }
 
+/// Helper to filter out ambiguous characters if requested
+fn get_pool(base: &[u8], avoid: bool) -> Vec<u8> {
+    if avoid {
+        base.iter()
+            .filter(|c| !AMBIGUOUS.contains(c))
+            .cloned()
+            .collect()
+    } else {
+        base.to_vec()
+    }
+}
+
 /// Generates a password
-fn generate_secure_password(rng: &mut impl Rng, len: usize) -> String {
+fn generate_secure_password(rng: &mut impl Rng, len: usize, avoid: bool) -> String {
+    let cap_pool = get_pool(CAPITAL, avoid);
+    let low_pool = get_pool(LOWER, avoid);
+    let dig_pool = get_pool(DIGITS, avoid);
+    let spec_pool = get_pool(SPECIAL, avoid);
+
     let mut password: Vec<char> = vec![
-        *CAPITAL.choose(rng).expect("CAPITAL pool is empty") as char,
-        *DIGITS.choose(rng).expect("DIGITS pool is empty") as char,
-        *SPECIAL.choose(rng).expect("SPECIAL pool is empty") as char,
+        *cap_pool.choose(rng).expect("CAPITAL pool empty") as char,
+        *dig_pool.choose(rng).expect("DIGITS pool empty") as char,
+        *spec_pool.choose(rng).expect("SPECIAL pool empty") as char,
     ];
 
-    let all_chars: Vec<u8> = [CAPITAL, LOWER, DIGITS, SPECIAL].concat();
+    let all_chars: Vec<u8> = [cap_pool, low_pool, dig_pool, spec_pool].concat();
+    
     let remaining = len.saturating_sub(password.len());
-
     password.extend((0..remaining).map(|_| {
         *all_chars.choose(rng).expect("Pool is empty") as char
     }));
