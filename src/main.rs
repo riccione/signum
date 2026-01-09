@@ -12,11 +12,14 @@ struct Cli {
     #[arg(short, long)]
     digit: bool,
     /// Set length of the password
-    #[arg(short, long, value_parser=clap::value_parser!(u8))]
+    #[arg(index=1, value_parser=clap::value_parser!(u8))]
     len: Option<u8>,
     /// Set numbers of passwords
-    #[arg(short, long, default_value_t = 1, value_parser=clap::value_parser!(u8))]
-    num: u8,
+    #[arg(index=2, value_parser=clap::value_parser!(u16))]
+    num: Option<u16>,
+    /// One password per line
+    #[arg(short = '1')]
+    single_column: bool,
     /// Avoid confusing characters like O, 0, I, l, 1
     #[arg(short, long)]
     safe: bool,
@@ -37,15 +40,53 @@ fn main() -> ExitCode {
         Some(l) => l as usize,
         None => if args.digit { 5 } else { 12 },
     };
+    
+    // magic number 156 comes from default grid size
+    // 6x26 
+    let num_to_generate = args.num.unwrap_or(
+        if args.single_column {
+            1 
+        } else { 
+            156
+        });
 
-    for _ in 0..args.num {
-        let pass: String = if args.digit {
+    // fixed 80-char width
+    const MAX_WIDTH: usize = 80;
+    
+    // width of password + 1 space for minimal gutter
+    let col_width = final_len + 1;
+
+    // calculate how many fit
+    let num_cols = if args.single_column {
+        1
+    } else {
+        (MAX_WIDTH / col_width).max(1)
+    };
+
+    for i in 0..num_to_generate {
+        let output: String = if args.digit {
             generate_pin(&mut rng, final_len)
         } else {
             generate_secure_password(&mut rng, final_len, args.safe)
         };
-        println!("{}", pass);
+        if num_cols > 1 {
+            // print with fixed padding to keep columns aligned
+            print!("{:<width$}", output, width = col_width);
+
+            // newline when the row is full
+            if (i + 1) % num_cols as u16 == 0 {
+                println!();
+            }
+        } else {
+            println!("{}", output);
+        }
     }
+
+    // final newline if the loop ended mid-row
+    if num_cols > 1 && num_to_generate % num_cols as u16 != 0 {
+        println!();
+    }
+
     ExitCode::SUCCESS
 }
 
