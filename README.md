@@ -9,7 +9,7 @@
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
 <div align="center">
-  <h3 align="center">Signum - password generator</h3>
+  <h3 align="center">Signum: CLI password generator</h3>
 </div>
 
 <!-- TABLE OF CONTENTS -->
@@ -30,7 +30,7 @@
       </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#testing">Testing</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -41,16 +41,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-Simple cli password generator written in Rust. Mainly for self education and self use.
-It uses several crates:
-- [https://crates.io/crates/clap](clap)
-- [https://crates.io/crates/rand](rand)
+Simple CLI password generator written in Rust. Mainly for self education and self use.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Built With
-
-* RUST 1.77.2
+Build with:
+- [Clap](https://crates.io/crates/clap)
+- [Rand](https://crates.io/crates/rand)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -59,51 +54,68 @@ It uses several crates:
 
 ### Prerequisites
 
-To build install Rust compiler [https://www.rust-lang.org/](https://www.rust-lang.org/)
+* RUST 1.77.0+
 
 ### Installation
 
-No installation - portable, one executable file
+Build from source:
+```
+cargo build --release
+```
+
+The binary is located in [target/release/signum](https://github.com/riccione/signum/releases).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Running without any arguments generates a random password with length equal 10.
-It contains at least 1 capital letter, 1 special symbol.
+Running without arguments generates a grid of **12-character** passwords. By
+default, each password contains at least one lowercase letter, one digit, one
+special symbol, and one uppercase letter.
 
-All arguments are optional:
+### Default Grid Layout
 
-`-d` or `--digit` = generate only random numbers (can be used for PINS)
+Signum automatically calculates how many passwords fit in your terminal width
+(max 80 chars).
 
-`-l [u8]` or `--len [u8]` = define the length of the password, max is 255
-`$ signum -l 20` = generates random password with length equal 20
+```
+$ signum
+# Generates a grid of 12-char passwords
+```
+#### Positional Arguments
+The length and number of passwords can be set directly without flags:
 
-`-n [u8]` or `--num [u8]` = number of generated passwords, max is 255
-`$ signum -n 20` = generates 20 random passwords
+`$ signum [LEN] [NUM]`
 
-`-h` or `--help` = help
+* **LEN** (u8): Define password length (default 12, or 5 for PINs).
+* **NUM** (u16): Number of passwords to generate (default 156 for grid).
 
-`-V` or `--version`
+Flags:
+
+* `-d`, `--digit`: Generate numeric PINs (default length 5).
+* `-1`: Force single column output (useful for pipes).
+* `-A`, `no-capitalize`: Exclude all uppercase letters.
+* `-B`, `--ambiguous`: Avoid confusing characters (O, 0, I, l, 1).
+* `-r`, `--remove-chars` [str]: Exclude specific characters from the pool.
+  * `$ signum -d -r 123` (Generates a PIN without 1, 2, or 3)
+* `-h` or `--help` = help
+* `-V` or `--version`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- ROADMAP -->
-## Roadmap
+## Testing
 
-- [ ] Add unit tests
-- [ ] Refactor code using best Rust practices
+`cargo test`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+If you have a suggestion that would make this better, please fork the repo and
+create a pull request. You can also simply open an issue with the tag
+"enhancement".  Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -134,6 +146,7 @@ Project Link:
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
+* **Inspired by `pwgen`**
 * [Choose an Open Source License](https://choosealicense.com)
 * [Rust](https://www.rust-lang.org/)
 
