@@ -183,3 +183,52 @@ fn generate_secure_password(
     password.shuffle(rng);
     password.into_iter().collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_pool_remove_chars() {
+        let base = b"abcdef";
+        let exclude = Some("ace".to_string());
+        let pool = get_pool(base, false, &exclude);
+
+        let result_str = String::from_utf8(pool).unwrap();
+        assert_eq!(result_str, "bdf");
+        assert!(!result_str.contains('a'));
+        assert!(!result_str.contains('c'));
+    }
+
+    #[test]
+    fn test_get_pool_ambiguous() {
+        let base = b"a01lI";
+        // pass 'true' for 'avoid' (the --ambiguous flag)
+        let pool = get_pool(base, true, &None);
+
+        let result_str = String::from_utf8(pool).unwrap();
+        // should only keep 'a', removing 0, 1, l, I
+        assert_eq!(result_str, "a");
+    }
+
+    #[test]
+    fn test_no_capitalize_logic() {
+        let mut rng = rand::rng();
+        // generate a long password to increase statistical certainty
+        let pwd = generate_secure_password(&mut rng, 100, false, true, &None);
+
+        // check that no character is uppercase
+        assert!(pwd.chars().all(|c| !c.is_uppercase()));
+    }
+
+    #[test]
+    fn test_pool_empty_fallback() {
+        let mut rng = rand::rng();
+        // exclude everything
+        let exclude = Some("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?/`~'\"\\".to_string());
+        let pwd =
+            generate_secure_password(&mut rng, 12, false, false, &exclude);
+
+        assert_eq!(pwd, "!!!_POOL_EMPTY_!!!");
+    }
+}
