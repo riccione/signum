@@ -72,17 +72,14 @@ fn main() -> ExitCode {
     };
 
     for i in 0..num_to_generate {
-        let output: String = if args.digit {
-            generate_pin(&mut rng, final_len)
-        } else {
-            generate_secure_password(
-                &mut rng,
-                final_len,
-                args.safe,
-                args.no_capitalize,
-                &args.remove_chars,
-            )
-        };
+        let output: String = generate_secure_password(
+            &mut rng,
+            final_len,
+            args.safe,
+            args.no_capitalize,
+            &args.remove_chars,
+            args.digit,
+        );
 
         if num_cols > 1 {
             // print with fixed padding to keep columns aligned
@@ -103,13 +100,6 @@ fn main() -> ExitCode {
     }
 
     ExitCode::SUCCESS
-}
-
-/// Generates simple numeric PIN
-fn generate_pin(rng: &mut impl Rng, len: usize) -> String {
-    (0..len)
-        .map(|_| *DIGITS.choose(rng).unwrap() as char)
-        .collect()
 }
 
 /// Helper to filter out ambiguous characters if requested
@@ -141,15 +131,26 @@ fn generate_secure_password(
     avoid: bool,
     no_caps: bool,
     custom_exclude: &Option<String>,
+    digit_only: bool,
 ) -> String {
-    let cap_pool = if no_caps {
+    let cap_pool = if no_caps || digit_only {
         vec![]
     } else {
         get_pool(CAPITAL, avoid, custom_exclude)
     };
-    let low_pool = get_pool(LOWER, avoid, custom_exclude);
+
+    let low_pool = if digit_only {
+        vec![]
+    } else {
+        get_pool(LOWER, avoid, custom_exclude)
+    };
+
+    let spec_pool = if digit_only {
+        vec![]
+    } else {
+        get_pool(SPECIAL, avoid, custom_exclude)
+    };
     let dig_pool = get_pool(DIGITS, avoid, custom_exclude);
-    let spec_pool = get_pool(SPECIAL, avoid, custom_exclude);
 
     let mut password: Vec<char> = Vec::new();
     // Pick mandatory chars ONLY if pools are not empty
@@ -215,7 +216,8 @@ mod tests {
     fn test_no_capitalize_logic() {
         let mut rng = rand::rng();
         // generate a long password to increase statistical certainty
-        let pwd = generate_secure_password(&mut rng, 100, false, true, &None);
+        let pwd =
+            generate_secure_password(&mut rng, 100, false, true, &None, false);
 
         // check that no character is uppercase
         assert!(pwd.chars().all(|c| !c.is_uppercase()));
@@ -226,8 +228,9 @@ mod tests {
         let mut rng = rand::rng();
         // exclude everything
         let exclude = Some("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?/`~'\"\\".to_string());
-        let pwd =
-            generate_secure_password(&mut rng, 12, false, false, &exclude);
+        let pwd = generate_secure_password(
+            &mut rng, 12, false, false, &exclude, false,
+        );
 
         assert_eq!(pwd, "!!!_POOL_EMPTY_!!!");
     }
