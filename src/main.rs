@@ -2,7 +2,6 @@ use clap::Parser;
 use rand::Rng;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
-use std::char;
 use std::process::ExitCode;
 
 #[derive(Parser)]
