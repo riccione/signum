@@ -1,7 +1,7 @@
 use clap::Parser;
+use rand::Rng;
 use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
-use rand::Rng;
 use std::char;
 use std::process::ExitCode;
 
@@ -109,10 +109,10 @@ fn get_pool(base: &[u8], avoid: bool, custom_exclude: Option<&str>) -> Vec<u8> {
             if avoid && AMBIGUOUS.contains(&c) {
                 return false;
             }
-            if let Some(exclude) = custom_exclude {
-                if exclude.as_bytes().contains(&c) {
-                    return false;
-                }
+            if let Some(exclude) = custom_exclude
+                && exclude.as_bytes().contains(&c)
+            {
+                return false;
             }
             true
         })
