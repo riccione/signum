@@ -77,7 +77,7 @@ fn main() -> ExitCode {
             final_len,
             args.safe,
             args.no_capitalize,
-            &args.remove_chars,
+            args.remove_chars.as_deref(),
             args.digit,
         );
 
@@ -103,11 +103,7 @@ fn main() -> ExitCode {
 }
 
 /// Helper to filter out ambiguous characters if requested
-fn get_pool(
-    base: &[u8],
-    avoid: bool,
-    custom_exclude: &Option<String>,
-) -> Vec<u8> {
+fn get_pool(base: &[u8], avoid: bool, custom_exclude: Option<&str>) -> Vec<u8> {
     base.iter()
         .filter(|&&c| {
             if avoid && AMBIGUOUS.contains(&c) {
@@ -130,7 +126,7 @@ fn generate_secure_password(
     len: usize,
     avoid: bool,
     no_caps: bool,
-    custom_exclude: &Option<String>,
+    custom_exclude: Option<&str>,
     digit_only: bool,
 ) -> String {
     let cap_pool = if no_caps || digit_only {
@@ -193,7 +189,7 @@ mod tests {
     fn test_get_pool_remove_chars() {
         let base = b"abcdef";
         let exclude = Some("ace".to_string());
-        let pool = get_pool(base, false, &exclude);
+        let pool = get_pool(base, false, exclude.as_deref());
 
         let result_str = String::from_utf8(pool).unwrap();
         assert_eq!(result_str, "bdf");
@@ -205,7 +201,7 @@ mod tests {
     fn test_get_pool_ambiguous() {
         let base = b"a01lI";
         // pass 'true' for 'avoid' (the --ambiguous flag)
-        let pool = get_pool(base, true, &None);
+        let pool = get_pool(base, true, None);
 
         let result_str = String::from_utf8(pool).unwrap();
         // should only keep 'a', removing 0, 1, l, I
@@ -217,7 +213,7 @@ mod tests {
         let mut rng = rand::rng();
         // generate a long password to increase statistical certainty
         let pwd =
-            generate_secure_password(&mut rng, 100, false, true, &None, false);
+            generate_secure_password(&mut rng, 100, false, true, None, false);
 
         // check that no character is uppercase
         assert!(pwd.chars().all(|c| !c.is_uppercase()));
@@ -229,7 +225,12 @@ mod tests {
         // exclude everything
         let exclude = Some("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?/`~'\"\\".to_string());
         let pwd = generate_secure_password(
-            &mut rng, 12, false, false, &exclude, false,
+            &mut rng,
+            12,
+            false,
+            false,
+            exclude.as_deref(),
+            false,
         );
 
         assert_eq!(pwd, "!!!_POOL_EMPTY_!!!");
