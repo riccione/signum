@@ -170,7 +170,7 @@ fn generate_secure_password(
     let remaining = len.saturating_sub(password.len());
     password.extend(
         (0..remaining)
-            .map(|_| *all_chars.choose(rng).expect("Pool is empty") as char),
+            .filter_map(|_| all_chars.choose(rng).map(|c| *c as char)),
     );
 
     password.shuffle(rng);
