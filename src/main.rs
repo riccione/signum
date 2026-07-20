@@ -128,7 +128,7 @@ fn get_pool(base: &[u8], avoid: bool, custom_exclude: Option<&str>) -> Vec<u8> {
             }
             true
         })
-        .cloned()
+        .copied()
         .collect()
 }
 
