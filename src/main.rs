@@ -11,10 +11,10 @@ struct Cli {
     #[arg(short, long)]
     digit: bool,
     /// Set length of the password
-    #[arg(index=1, value_parser=clap::value_parser!(u8))]
+    #[arg(index = 1)]
     len: Option<u8>,
     /// Set numbers of passwords
-    #[arg(index=2, value_parser=clap::value_parser!(u16))]
+    #[arg(index = 2)]
     num: Option<u16>,
     /// One password per line
     #[arg(short = '1')]
