@@ -71,14 +71,27 @@ fn main() -> ExitCode {
         (MAX_WIDTH / col_width).max(1)
     };
 
+    // Build character pools once, not per-password
+    let cap_pool = if args.no_capitalize || args.digit {
+        vec![]
+    } else {
+        get_pool(CAPITAL, args.safe, args.remove_chars.as_deref())
+    };
+    let low_pool = if args.digit {
+        vec![]
+    } else {
+        get_pool(LOWER, args.safe, args.remove_chars.as_deref())
+    };
+    let spec_pool = if args.digit {
+        vec![]
+    } else {
+        get_pool(SPECIAL, args.safe, args.remove_chars.as_deref())
+    };
+    let dig_pool = get_pool(DIGITS, args.safe, args.remove_chars.as_deref());
+
     for i in 0..num_to_generate {
         let output: String = generate_secure_password(
-            &mut rng,
-            final_len,
-            args.safe,
-            args.no_capitalize,
-            args.remove_chars.as_deref(),
-            args.digit,
+            &mut rng, final_len, &cap_pool, &low_pool, &dig_pool, &spec_pool,
         );
 
         if num_cols > 1 {
@@ -120,34 +133,18 @@ fn get_pool(base: &[u8], avoid: bool, custom_exclude: Option<&str>) -> Vec<u8> {
         .collect()
 }
 
-/// Generates a password
+/// Generates a password from pre-built character pools.
+///
+/// Pools are passed as slices to avoid per-call allocations.
+/// Empty slices are treated as disabled pools.
 fn generate_secure_password(
     rng: &mut impl Rng,
     len: usize,
-    avoid: bool,
-    no_caps: bool,
-    custom_exclude: Option<&str>,
-    digit_only: bool,
+    cap_pool: &[u8],
+    low_pool: &[u8],
+    dig_pool: &[u8],
+    spec_pool: &[u8],
 ) -> String {
-    let cap_pool = if no_caps || digit_only {
-        vec![]
-    } else {
-        get_pool(CAPITAL, avoid, custom_exclude)
-    };
-
-    let low_pool = if digit_only {
-        vec![]
-    } else {
-        get_pool(LOWER, avoid, custom_exclude)
-    };
-
-    let spec_pool = if digit_only {
-        vec![]
-    } else {
-        get_pool(SPECIAL, avoid, custom_exclude)
-    };
-    let dig_pool = get_pool(DIGITS, avoid, custom_exclude);
-
     let mut password: Vec<char> = Vec::new();
     // Pick mandatory chars ONLY if pools are not empty
     if let Some(c) = low_pool.choose(rng) {
@@ -163,8 +160,7 @@ fn generate_secure_password(
         password.push(*c as char);
     }
 
-    let all_chars: Vec<u8> =
-        [&cap_pool[..], &low_pool[..], &dig_pool[..], &spec_pool[..]].concat();
+    let all_chars: Vec<u8> = [cap_pool, low_pool, dig_pool, spec_pool].concat();
 
     // The only hard failure: nothing left to use
     if all_chars.is_empty() {
@@ -211,9 +207,16 @@ mod tests {
     #[test]
     fn test_no_capitalize_logic() {
         let mut rng = rand::rng();
+        // Build pools with no caps enabled
+        let cap_pool: Vec<u8> = vec![];
+        let low_pool = get_pool(LOWER, false, None);
+        let dig_pool = get_pool(DIGITS, false, None);
+        let spec_pool = get_pool(SPECIAL, false, None);
+
         // generate a long password to increase statistical certainty
-        let pwd =
-            generate_secure_password(&mut rng, 100, false, true, None, false);
+        let pwd = generate_secure_password(
+            &mut rng, 100, &cap_pool, &low_pool, &dig_pool, &spec_pool,
+        );
 
         // check that no character is uppercase
         assert!(pwd.chars().all(|c| !c.is_uppercase()));
@@ -222,15 +225,14 @@ mod tests {
     #[test]
     fn test_pool_empty_fallback() {
         let mut rng = rand::rng();
-        // exclude everything
-        let exclude = Some("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>?/`~'\"\\".to_string());
+        // Build empty pools (everything excluded)
+        let cap_pool: Vec<u8> = vec![];
+        let low_pool: Vec<u8> = vec![];
+        let dig_pool: Vec<u8> = vec![];
+        let spec_pool: Vec<u8> = vec![];
+
         let pwd = generate_secure_password(
-            &mut rng,
-            12,
-            false,
-            false,
-            exclude.as_deref(),
-            false,
+            &mut rng, 12, &cap_pool, &low_pool, &dig_pool, &spec_pool,
         );
 
         assert_eq!(pwd, "!!!_POOL_EMPTY_!!!");
