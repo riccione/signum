@@ -12,9 +12,11 @@ permissions:
 
 jobs:
   release:
-    uses: riccione/github-workflows/.github/workflows/rust-release.yml@24ba5409c1eeac121965cedc2fb507b0387f25af
+    uses: riccione/github-workflows/.github/workflows/rust-release.yml@7ed8a722bf3860061e17c1b84d0e1cf3a5a2fb5d
     permissions:
       contents: write
+      id-token: write
     with:
-      bin_name: signum
+      bin_names: "signum"
+      build_musl: true
       tag: ${{ github.ref_name }}
