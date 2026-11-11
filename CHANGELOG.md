@@ -1,3 +1,14 @@
+## [0.3.1] - 2026-11-11
+
+### Documentation
+
+- *(readme)* Overhaul documentation layout and installation guide
+
+### Miscellaneous Tasks
+
+- Configure cargo-release workspace metadata and loosen dependency versions
+- Bump reusable workflows and enable musl build with id-token permissions
+- Add rust-toolchain.toml with stable channel, components, and musl target
 ## [0.3.0] - 2026-07-20
 
 ### Bug Fixes
@@ -13,6 +24,8 @@
 - Add CI workflow and update release workflow
 - Update ci to reusable workflow
 - Update release workflow
+- Fix release workflow
+- Update Lock file
 
 ### Other
 
