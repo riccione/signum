@@ -1,153 +1,227 @@
-<a name="readme-top"></a>
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
 <div align="center">
-  <h3 align="center">Signum: CLI password generator</h3>
+
+# Signum
+
+Signum is a lightweight command-line password generator written in Rust.
+Generate random passwords or numeric PINs directly from your terminal, with
+options to customize their length, quantity, and character sets.
+
+Inspired by [pwgen](https://github.com/tytso/pwgen).
+
+[![CI](https://github.com/riccione/signum/actions/workflows/ci.yml/badge.svg)](https://github.com/riccione/signum/actions)
+[![Release](https://img.shields.io/github/v/release/riccione/signum)](https://github.com/riccione/signum/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 </div>
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#testing">Testing</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+## Features
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+- Generate multiple passwords in a terminal-friendly grid.
+- Customize password length and the number of passwords.
+- Generate numeric PINs.
+- Exclude uppercase letters or ambiguous characters.
+- Remove specific characters from the character set.
+- Output passwords in a single column, making it convenient to use with other command-line tools.
 
-Simple CLI password generator written in Rust. Mainly for self education and self use.
+## Demo
 
-Build with:
-- [Clap](https://crates.io/crates/clap)
-- [Rand](https://crates.io/crates/rand)
+```console
+$ signum 12 6
+VLAZS%fK6Npl -i$yqZ#J6rgQ ai4(czTq7)W& LHhKZ#Lq@Nq8 FBEzgb6(BMvX dS5OV#3gUr0e
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+$ signum -B -1 10
+J6*kWxBK95
 
-<!-- GETTING STARTED -->
-## Getting Started
+$ signum 10 3 -r 0OIl1 
+E&)9yPubm5 *r&)-dk75P iY%)6AEd^T
 
-### Prerequisites
-
-* RUST 1.77.0+
-
-### Installation
-
-Build from source:
+$ signum 5 3 -d -r0 
+48117 72324 62765 
 ```
+
+## Install
+
+For Linux, we provide two builds:
+* **`linux-musl-x86_64` (Recommended):** Statically linked with musl. Does not require glibc or other shared libraries. 
+* **`linux-x86_64`:** Dynamically linked against glibc. Requires a compatible glibc installation.
+
+**Linux (musl-x86_64):**
+
+```sh
+curl -LO https://github.com/riccione/signum/releases/latest/download/signum_linux-musl-x86_64
+chmod +x signum_linux-musl-x86_64
+sudo mv signum_linux-musl-x86_64 /usr/local/bin/signum
+```
+
+**Linux (x86_64):**
+
+```sh
+curl -LO https://github.com/riccione/signum/releases/latest/download/signum_linux-x86_64
+chmod +x signum_linux-x86_64
+sudo mv signum_linux-x86_64 /usr/local/bin/signum
+```
+
+**macOS:**
+
+```sh
+# Apple Silicon
+curl -LO https://github.com/riccione/signum/releases/latest/download/signum_macos-arm64
+chmod +x signum_macos-arm64
+sudo mv signum_macos-arm64 /usr/local/bin/signum
+
+# Intel
+curl -LO https://github.com/riccione/signum/releases/latest/download/signum_macos-x86_64
+chmod +x signum_macos-x86_64
+sudo mv signum_macos-x86_64 /usr/local/bin/signum
+```
+
+**Windows:** download `signum_win-x86_64.exe` from the
+[releases page](https://github.com/riccione/signum/releases) and put it on
+your `PATH`.
+
+Every release also publishes `SHA256SUMS`.
+
+**With Cargo:**
+
+```sh
+cargo install --git https://github.com/riccione/signum
+```
+
+**From source** (Rust 1.97.1+):
+
+```sh
+git clone https://github.com/riccione/signum
+cd signum
 cargo build --release
 ```
 
-The binary is located in [target/release/signum](https://github.com/riccione/signum/releases).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- USAGE EXAMPLES -->
 ## Usage
 
-Running without arguments generates a grid of **12-character** passwords. By
-default, each password contains at least one lowercase letter, one digit, one
-special symbol, and one uppercase letter.
+### Generate passwords
 
-### Default Grid Layout
+Run Signum without arguments to generate a grid of 12-character passwords:
 
-Signum automatically calculates how many passwords fit in your terminal width
-(max 80 chars).
-
+```bash
+signum
 ```
-$ signum
-# Generates a grid of 12-char passwords
+
+By default, generated passwords contain at least one character from each of these groups:
+
+- Lowercase letters (`a-z`)
+- Uppercase letters (`A-Z`)
+- Digits (`0-9`)
+- Special characters `")-(*&^%$#@!~"`
+
+Signum automatically adjusts the grid layout to your terminal width (up to 80 characters).
+
+### Customize password length and quantity
+
+Signum accepts two positional arguments:
+
+```text
+signum [LENGTH] [COUNT]
 ```
-#### Positional Arguments
-The length and number of passwords can be set directly without flags:
 
-`$ signum [LEN] [NUM]`
+| Argument | Description | Default |
+|---|---|---|
+| `LENGTH` | Password length | `12` |
+| `COUNT` | Number of passwords | `156` |
 
-* **LEN** (u8): Define password length (default 12, or 5 for PINs).
-* **NUM** (u16): Number of passwords to generate (default 156 for grid).
+By default, Signum generates 156 passwords in grid mode and one password in single-column mode.
 
-Flags:
+For example, generate five passwords, each 20 characters long:
 
-* `-d`, `--digit`: Generate numeric PINs (default length 5).
-* `-1`: Force single column output (useful for pipes).
-* `-A`, `no-capitalize`: Exclude all uppercase letters.
-* `-B`, `--ambiguous`: Avoid confusing characters (O, 0, I, l, 1).
-* `-r`, `--remove-chars` [str]: Exclude specific characters from the pool.
-  * `$ signum -d -r 123` (Generates a PIN without 1, 2, or 3)
-* `-h` or `--help` = help
-* `-V` or `--version`
+```bash
+signum 20 5
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Generate numeric PINs
 
-## Testing
+Use `-d` or `--digit` to generate numeric PINs. The default PIN length is 5 characters.
 
-`cargo test`
+```bash
+signum -d
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+You can also specify the length and quantity:
 
-<!-- CONTRIBUTING -->
+```bash
+signum -d 6 10
+```
+
+### Customize the character set
+
+Signum provides several options to customize generated passwords:
+
+| Option | Description |
+|---|---|
+| `-d`, `--digit` | Generate numeric PINs (default length: 5). |
+| `-1` | Display passwords in a single column. |
+| `-A`, `--no-capitalize` | Exclude uppercase letters. |
+| `-B`, `--ambiguous` | Exclude ambiguous characters (`O`, `0`, `I`, `l`, `1`). |
+| `-r`, `--remove-chars <CHARS>` | Exclude specific characters from the character set. |
+| `-h`, `--help` | Display help information. |
+| `-V`, `--version` | Display version information. |
+
+Examples:
+
+Generate passwords without uppercase letters:
+
+```bash
+signum -A
+```
+
+Avoid ambiguous characters:
+
+```bash
+signum -B
+```
+
+Exclude specific characters:
+
+```bash
+signum -r '0O1Il'
+```
+
+Generate PINs without the digits `1`, `2`, and `3`:
+
+```bash
+signum -d -r 123
+```
+
+Generate ten 16-character passwords in a single column:
+
+```bash
+signum -1 16 10
+```
+
+For a complete list of available options, run:
+
+```bash
+signum --help
+```
+
+## Development
+
+Build the project:
+
+```bash
+cargo build
+```
+
+Run the test suite:
+
+```bash
+cargo test
+```
+
 ## Contributing
 
-If you have a suggestion that would make this better, please fork the repo and
-create a pull request. You can also simply open an issue with the tag
-"enhancement".  Don't forget to give the project a star! Thanks again!
+Contributions, bug reports, and feature suggestions are welcome.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- Open an issue to report a bug or discuss an idea.
+- Fork the repository and submit a pull request with your changes.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTACT -->
-## Contact
-
-No reason to contact with me ^_-.
-Just create an issue if you need something.
-
-Project Link:
-[https://github.com/riccionee/hermes](https://github.com/riccione/hermes)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* **Inspired by `pwgen`**
-* [Choose an Open Source License](https://choosealicense.com)
-* [Rust](https://www.rust-lang.org/)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+Signum is distributed under the [MIT License](LICENSE).
